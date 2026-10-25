@@ -2,13 +2,13 @@
 
 [Showcase](https://seb-prjcts-be.github.io/p5.merz/) · [Examples](https://seb-prjcts-be.github.io/p5.merz/docs/examples.html) · [Bauteile](https://seb-prjcts-be.github.io/p5.merz/docs/bauteile.html) · [Fundsachen](https://seb-prjcts-be.github.io/p5.merz/docs/fundsachen.html) · [Guide](https://seb-prjcts-be.github.io/p5.merz/docs/guide.html) · [About](https://seb-prjcts-be.github.io/p5.merz/docs/about.html)
 
-`p5.merz` gives you graphic building blocks for your own p5.js sketches: a geometric alphabet drawn from paths, named letter parts you can pull apart in a loop, rectangular and oval cuts, inward-torn edges, text stamps from a small printer's case, subtle paper and ink variation, and 28 found pieces cut from scans of Kurt Schwitters' magazine *Merz* (1923–1932). The library handles the repeated mechanics; you draw, combine and place everything in ordinary p5 code.
+`p5.merz` gives you graphic building blocks for your own p5.js sketches: a geometric alphabet drawn from paths, named letter parts you can pull apart in a loop, rectangular and oval cuts, inward-torn edges, text stamps from a small printer's case, subtle paper and ink variation, and 28 found pieces cut from scans of Kurt Schwitters' magazine *Merz* (1923–1932). The library handles the repeated mechanics; you draw, combine and place everything in ordinary p5 code. Take an R apart and keep only its bowl, tear a word into four strips, or put the M from the cover of *Merz* 8/9 (1924) next to an M of your own.
 
 The German function names (`satz`, `bauteile`, `schnitt`, `riss`, `andruck`, `stempel`, `fundsachen`) are a nod to Schwitters' studio vocabulary, in the same spirit as `p5.gysin`. [About](https://seb-prjcts-be.github.io/p5.merz/docs/about.html) tells where the affection comes from.
 
 ## Install
 
-Load p5.js, then the library, then your sketch. Keep `assets/fonts/` next to the library file; it holds the two bundled fonts.
+Load p5.js, then the library, then your sketch. Keep `assets/fonts/` next to the library file; it holds the two bundled fonts. `assets/fundsachen/` holds the found pieces, for sketches that use them.
 
 ```html
 <script src="vendor/p5-2.3.4.min.js"></script>
@@ -55,7 +55,7 @@ Change the word, the number of strips or a seed and run again.
 
 ## Stamps
 
-`Merz.stempel(source, x, y, options)` stamps text from the printer's case: `font` is `grotesk` (Archivo, the default) or `antiqua` (Bodoni Moda), with `weight` from 100 to 900 and `stretch` from 62 to 125. Pass an array of strings for multiple lines, with `leading`, `spacing` and `align` (`left`, `center` or `right`). The same call stamps geometry, letter parts and cut fragments, repeated with `repeat`, `stepX`, `stepY` and `offsetX`. [Stempel](https://seb-prjcts-be.github.io/p5.merz/docs/guide.html#stempel).
+`Merz.stempel(source, x, y, options)` stamps text from the printer's case: `font` is `grotesk` (Archivo, the default) or `antiqua` (Bodoni Moda), with `weight` from 100 to 900 and `stretch` from 62 to 125. Pass an array of strings for multiple lines, with `leading`, `spacing` and `align` (`left`, `center` or `right`). The same call stamps geometry, letter parts and cut fragments, repeated with `repeat`, `stepX`, `stepY` and `offsetX`. `mirror: true` turns a piece over left to right, in place; a list such as `mirror: [false, true]` turns every second copy. [Stempel](https://seb-prjcts-be.github.io/p5.merz/docs/guide.html#stempel).
 
 ## Surface
 
@@ -77,11 +77,16 @@ Change the word, the number of strips or a seed and run again.
 
 - [Riss](https://seb-prjcts-be.github.io/p5.merz/examples/riss/): the geometric alphabet sliced into strips, torn and repeated.
 - [Bauteile](https://seb-prjcts-be.github.io/p5.merz/examples/bauteile/): named letter parts set free in a p5 loop with rotation, scale and open space.
-- [Free composition](https://seb-prjcts-be.github.io/p5.merz/examples/free-composition/): geometric words, a blue plane and a red rule with SVG export.
-- [Poster](https://seb-prjcts-be.github.io/p5.merz/examples/poster/): an exhibition poster using geometric letters, numerals and punctuation, with SVG export.
+- [Fundsachen](https://seb-prjcts-be.github.io/p5.merz/examples/fundsachen/): five found pieces from the cover of *Merz* 8/9 beside a geometric M, torn, split and repeated.
+- [Free composition](https://seb-prjcts-be.github.io/p5.merz/examples/free-composition/): two words from the cover of *Merz* 8/9, a blue plane and a red rule with SVG export.
+- [Poster](https://seb-prjcts-be.github.io/p5.merz/examples/poster/): the cover facts of *Merz* 8/9 as a poster in geometric letters, numerals and punctuation, with SVG export.
 - [Characters](https://seb-prjcts-be.github.io/p5.merz/examples/characters/): all supported characters in the geometric alphabet side by side.
 
 Each page shows its code beside the drawing, with a button to copy the sketch. The [studies](https://seb-prjcts-be.github.io/p5.merz/docs/research.html) behind the library stay online.
+
+## Related work
+
+[p5.gysin](https://github.com/seb-prjcts-be/p5.gysin) is the sister library: cut-up and permuted text, drawn for the pen plotter, with the same habit of naming functions after the studio. For the outlines of a real typeface in p5, `textToPoints()` in p5.js itself does that work; the geometric alphabet here is deliberately not a font but a drawing on a five-unit grid, so its parts can be taken out and used alone. The pages the found pieces come from are online in full at the [International Dada Archive](https://sdrc.lib.uiowa.edu/dada/merz/), which is the better place to look at Schwitters' typography itself.
 
 ## Public API
 

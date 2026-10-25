@@ -1,4 +1,4 @@
-// An imagined exhibition poster using geometric letters, numbers and punctuation.
+// The cover facts of Merz 8/9 set as a poster in geometric letters, numerals and punctuation.
 let poster;
 
 function setup() {
@@ -7,12 +7,13 @@ function setup() {
   const farbe = Merz.farbe;
   poster = Merz.create({ width: 700, height: 900 });
   poster.plane(60, 405, 220, 180, { color: farbe.blau });
-  poster.text('EXPO\n2026', 60, 70, { size: 110, leading: 145, spacing: 18 });
+  poster.text('MERZ\n8/9', 60, 70, { size: 110, leading: 145, spacing: 18 });
   poster.line(60, 370, 640, 370, { color: farbe.rot, strokeWeight: 12 });
-  poster.text('FORM & SPACE', 60, 640, { size: 36, spacing: 8 });
-  poster.text('10/10 — 20:00', 60, 715, { size: 30, spacing: 6 });
-  poster.text('€ 12,50 (–25%)', 60, 780, { size: 26, spacing: 5 });
-  describe('An imagined exhibition poster: Expo 2026, Form and Space, 10 October at 20:00, 12 euros 50 with a 25 percent discount.');
+  poster.text('NASCI', 320, 420, { size: 52, spacing: 10, color: farbe.rot });
+  poster.text('BAND 2, NR. 8/9', 60, 640, { size: 30, spacing: 6 });
+  poster.text('APRIL / JULI 1924', 60, 715, { size: 26, spacing: 5 });
+  poster.text('NATUR VON LAT. NASCI', 60, 780, { size: 22, spacing: 5 });
+  describe('A poster with the cover facts of Merz 8/9: the title and issue numbers, NASCI in red beside a blue plane, then volume, months and year in geometric letters.');
   document.getElementById('save-poster').addEventListener('click', () => poster.downloadSVG('p5.merz-poster.svg'));
 }
 

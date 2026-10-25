@@ -783,6 +783,7 @@
   const escape=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
   const isContext=value=>!!value&&typeof value==='object'&&typeof value.push==='function'&&typeof value.applyMatrix==='function';
   function number(value,name,min=-Infinity){if(!Number.isFinite(value)||value<min)throw new RangeError(name+' must be a finite number >= '+min);return value;}
+  function boolean(value,name){if(typeof value!=='boolean')throw new TypeError(name+' must be true or false');return value;}
   function colour(value){if(typeof value!=='string'||!/^#[0-9a-f]{6}$/i.test(value))throw new TypeError('Use a six-digit hex colour, such as #234b92');return value;}
   function text(value){if(typeof value!=='string')throw new TypeError('Text must be a string');const result=value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/\r\n?/g,'\n').replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/[\u00a0\u202f]/g,' ');for(const c of result)if(c!==' '&&c!=='\n'&&!glyphs[c])throw new RangeError('Unsupported character: '+c);return result;}
   function satz(value,options={}){
@@ -795,23 +796,27 @@
     return {text:content,paths,width:Math.max(maxWidth,Math.max(0,x-spacing)),height:content?y+size:0};
   }
   function validate(item){
-    for(const k of ['x','y','angle'])number(item[k],k);number(item.scale,'scale',.001);colour(item.color);
+    for(const k of ['x','y','angle'])number(item[k],k);number(item.scale,'scale',.001);colour(item.color);boolean(item.mirror,'mirror');
     if(item.type==='text')item.text=satz(item.text,item).text;
     if(item.type==='line'){number(item.x2,'x2');number(item.y2,'y2');number(item.strokeWeight,'strokeWeight',.01);}
     if(item.type==='plane'){number(item.width,'width',.01);number(item.height,'height',.01);}
     return item;
   }
-  const keys={text:['text','x','y','size','weight','proportion','spacing','leading','color','angle','scale'],line:['x','y','x2','y2','strokeWeight','color','angle','scale'],plane:['x','y','width','height','color','angle','scale']};
+  // Name the accepted options in the error; rotation is the mistake p5 habits make most.
+  const unknownOption=(type,key)=>'Unknown option: '+key+'. '+(['rotation','rotate'].includes(key)?'Use angle, in degrees.':'A '+type+' accepts '+keys[type].filter(k=>!['x','y','text','x2','y2'].includes(k)).join(', ')+'.');
+  const keys={text:['text','x','y','size','weight','proportion','spacing','leading','color','angle','scale','mirror'],line:['x','y','x2','y2','strokeWeight','color','angle','scale','mirror'],plane:['x','y','width','height','color','angle','scale','mirror']};
+  // The span an element covers along its own x axis; mirror turns it over within that span.
+  const span=item=>item.type==='plane'?[0,item.width]:item.type==='line'?[Math.min(0,item.x2),Math.max(0,item.x2)]:[0,satz(item.text,item).width];
   class MerzComposition {
     constructor({width=600,height=600,background=palette.paper}={}){this.width=number(width,'width',1);this.height=number(height,'height',1);this.background=background===null?null:colour(background);this._items=[];this._next=1;}
-    _add(type,properties){for(const key of Object.keys(properties))if(!keys[type].includes(key))throw new RangeError('Unknown option: '+key);const item=validate({type,x:0,y:0,angle:0,scale:1,color:palette.ink,...properties});item.id='element-'+this._next++;this._items.push(item);return item.id;}
+    _add(type,properties){for(const key of Object.keys(properties))if(!keys[type].includes(key))throw new RangeError(unknownOption(type,key));const item=validate({type,x:0,y:0,angle:0,scale:1,color:palette.ink,mirror:false,...properties});item.id='element-'+this._next++;this._items.push(item);return item.id;}
     text(value,x,y,options={}){const content=text(value);return this._add('text',{text:content,x,y,size:100,weight:.8,proportion:1,spacing:12,...options});}
     letter(value,x,y,options={}){const content=text(value);if(content.length!==1||content===' '||content==='\n')throw new RangeError('letter() needs one supported character');return this.text(content,x,y,options);}
     line(x1,y1,x2,y2,options={}){return this._add('line',{x:x1,y:y1,x2:x2-x1,y2:y2-y1,strokeWeight:4,...options});}
     plane(x,y,width,height,options={}){return this._add('plane',{x,y,width,height,...options});}
     get(id){const item=this._items.find(i=>i.id===id);if(!item)throw new RangeError('Unknown id: '+id);return copy(item);}
     items(){return this._items.map(copy);}
-    update(id,changes){const current=this.get(id);for(const key of Object.keys(changes))if(!keys[current.type].includes(key))throw new RangeError('Unknown option: '+key);const candidate=validate({...current,...changes});this._items[this._items.findIndex(i=>i.id===id)]=candidate;return this;}
+    update(id,changes){const current=this.get(id);for(const key of Object.keys(changes))if(!keys[current.type].includes(key))throw new RangeError(unknownOption(current.type,key));const candidate=validate({...current,...changes});this._items[this._items.findIndex(i=>i.id===id)]=candidate;return this;}
     move(id,x,y){return this.update(id,{x,y});}
     remove(id){this.get(id);this._items=this._items.filter(i=>i.id!==id);return this;}
     bringToFront(id){const item=this.get(id);this.remove(id);this._items.push(item);return this;}
@@ -826,6 +831,7 @@
         p.rectMode(p.CORNER ?? 'corner');p.strokeCap(p.PROJECT ?? 'square');p.strokeJoin(p.MITER ?? 'miter');
         for(const item of this._items){p.push();try{
           const a=item.angle*Math.PI/180;p.applyMatrix(Math.cos(a)*item.scale,Math.sin(a)*item.scale,-Math.sin(a)*item.scale,Math.cos(a)*item.scale,item.x,item.y);
+          if(item.mirror){const [left,right]=span(item);p.applyMatrix(-1,0,0,1,left+right,0);}
           if(item.type==='plane'){p.noStroke();p.fill(item.color);p.rect(0,0,item.width,item.height);}
           else {p.noFill();p.stroke(item.color);if(item.type==='line'){p.strokeWeight(item.strokeWeight);p.line(0,0,item.x2,item.y2);}else for(const line of satz(item.text,item).paths){p.strokeWeight(line.width);p.beginShape();line.points.forEach(v=>p.vertex(...v));p.endShape();}}
         }finally{p.pop();}}
@@ -841,7 +847,7 @@
         if(item.type==='line')return `<path d="M0 0 L${item.x2} ${item.y2}" fill="none" stroke="${item.color}" stroke-width="${item.strokeWeight}" stroke-linecap="square"/>`;
         return satz(item.text,item).paths.map(line=>`<path d="${line.points.map((v,i)=>(i?'L':'M')+v.join(' ')).join(' ')}" fill="none" stroke="${item.color}" stroke-width="${line.width}" stroke-linecap="square" stroke-linejoin="miter"/>`).join('');
       };
-      return `<svg xmlns="http://www.w3.org/2000/svg" width="${this.width}" height="${this.height}" viewBox="0 0 ${this.width} ${this.height}"><title>${escape(title)}</title><defs><clipPath id="${prefix}page"><rect width="${this.width}" height="${this.height}"/></clipPath></defs><g clip-path="url(#${prefix}page)">`+(this.background===null?'':`<rect width="${this.width}" height="${this.height}" fill="${this.background}"/>`)+this._items.map(item=>`<g id="${prefix}${item.id}" transform="translate(${item.x} ${item.y}) rotate(${item.angle}) scale(${item.scale})">${shape(item)}</g>`).join('')+'</g></svg>';
+      return `<svg xmlns="http://www.w3.org/2000/svg" width="${this.width}" height="${this.height}" viewBox="0 0 ${this.width} ${this.height}"><title>${escape(title)}</title><defs><clipPath id="${prefix}page"><rect width="${this.width}" height="${this.height}"/></clipPath></defs><g clip-path="url(#${prefix}page)">`+(this.background===null?'':`<rect width="${this.width}" height="${this.height}" fill="${this.background}"/>`)+this._items.map(item=>`<g id="${prefix}${item.id}" transform="translate(${item.x} ${item.y}) rotate(${item.angle}) scale(${item.scale})${item.mirror?` translate(${span(item).reduce((l,r)=>l+r)} 0) scale(-1 1)`:''}">${shape(item)}</g>`).join('')+'</g></svg>';
     }
     downloadSVG(filename='p5.merz.svg'){if(!root.document)throw new Error('downloadSVG() needs a browser');const url=URL.createObjectURL(new Blob([this.exportSVG()],{type:'image/svg+xml;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
   }
@@ -1012,23 +1018,24 @@
       if(!Number.isSafeInteger(repeat)||repeat<1||expanded.length+repeat>1024)throw new RangeError('stempel allows up to 1024 impressions');
       number(stepX,'stepX');number(stepY,'stepY');number(offsetX,'offsetX');
       number(base.x,'x');number(base.y,'y');
-      for(const key of ['angle','scale','color']){
+      for(const key of ['angle','scale','color','mirror']){
         if(Array.isArray(base[key])){
           if(!base[key].length)throw new RangeError(key+' pattern must not be empty');
           for(const value of base[key]){
-            if(key==='color')colour(value);else number(value,key,key==='scale'?.001:-Infinity);
+            if(key==='color')colour(value);else if(key==='mirror')boolean(value,key);else number(value,key,key==='scale'?.001:-Infinity);
           }
         }
       }
       for(let i=0;i<repeat;i++){
         const copy={...base,x:base.x+i*stepX+(i%2)*offsetX,y:base.y+i*stepY};
-        for(const key of ['angle','scale','color'])if(Array.isArray(base[key]))copy[key]=base[key][i%base[key].length];
+        for(const key of ['angle','scale','color','mirror'])if(Array.isArray(base[key]))copy[key]=base[key][i%base[key].length];
         expanded.push(copy);
       }
     }
     const copies=expanded.map(item=>{
       if(!item||typeof item!=='object')throw new TypeError('Each placement needs x and y');
-      for(const key of Object.keys(item))if(!(isText?['x','y','angle','scale','color','size','font','weight','stretch','rows','leading','spacing','align']:['x','y','angle','scale','color']).includes(key))throw new RangeError('Unknown placement option: '+key);
+      const accepted=isText?['x','y','angle','scale','color','mirror','size','font','weight','stretch','rows','leading','spacing','align']:['x','y','angle','scale','color','mirror'];
+      for(const key of Object.keys(item))if(!accepted.includes(key))throw new RangeError('Unknown placement option: '+key+'. '+(['rotation','rotate'].includes(key)?'Use angle, in degrees.':'Placements accept '+accepted.join(', ')+'.'));
       const textOptions={};
       if(isText){
         textOptions.size=number(item.size??32,'size',.001);
@@ -1045,7 +1052,7 @@
         textOptions.align=item.align??'left';
         if(!['left','center','right'].includes(textOptions.align))throw new RangeError('align must be left, center or right');
       }
-      return {...textOptions,x:number(item.x,'x'),y:number(item.y,'y'),angle:number(item.angle??0,'angle'),scale:number(item.scale??1,'scale',.001),color:colour(item.color??palette.ink)};
+      return {...textOptions,x:number(item.x,'x'),y:number(item.y,'y'),angle:number(item.angle??0,'angle'),scale:number(item.scale??1,'scale',.001),color:colour(item.color??palette.ink),mirror:boolean(item.mirror??false,'mirror')};
     });
     if(!p||typeof p.push!=='function'||typeof p.applyMatrix!=='function')throw new TypeError('stempel needs a p5 drawing context');
     const images=new Map();
@@ -1063,19 +1070,20 @@
           if(typeof p.textWeight==='function')p.textWeight(item.weight);
           p.textStyle(p.NORMAL??'normal');p.textAlign(p.LEFT??'left',p.BASELINE??'alphabetic');p.textLeading(item.leading);
           const all=[];for(let row=0;row<item.rows;row++)all.push(...lines);
+          const measure=line=>{const chars=item.spacing===0?null:[...line];const advances=chars?chars.map(ch=>p.textWidth(ch)):null;return [chars,advances,chars?Math.max(0,advances.reduce((sum,w)=>sum+w,0)+item.spacing*(chars.length-1)):p.textWidth(line)];};
+          if(item.mirror){const block=Math.max(0,...all.map(line=>measure(line)[2]));const left=item.align==='right'?-block:item.align==='center'?-block/2:0;p.applyMatrix(-1,0,0,1,left*2+block,0);}
           for(const [i,line] of all.entries()){
             const y=i*item.leading;
             if(item.spacing===0&&item.align==='left'){p.text(line,0,y);continue;}
-            const chars=item.spacing===0?null:[...line];
-            const advances=chars?chars.map(ch=>p.textWidth(ch)):null;
-            const width=chars?Math.max(0,advances.reduce((sum,w)=>sum+w,0)+item.spacing*(chars.length-1)):p.textWidth(line);
+            const [chars,advances,width]=measure(line);
             const start=item.align==='right'?-width:item.align==='center'?-width/2:0;
             if(chars){let cx=start;for(const [k,ch] of chars.entries()){p.text(ch,cx,y);cx+=advances[k]+item.spacing;}}
             else p.text(line,start,y);
           }
         }
-        else if(isFragment){p.imageMode(p.CORNER??'corner');p.noTint();p.image(images.get(material).get(item.color),0,0);}
+        else if(isFragment){if(item.mirror)p.applyMatrix(-1,0,0,1,material.width,0);p.imageMode(p.CORNER??'corner');p.noTint();p.image(images.get(material).get(item.color),0,0);}
         else {
+          if(item.mirror){let left=Infinity,right=-Infinity;for(const path of paths)for(const [px] of path.points){left=Math.min(left,px-path.width/2);right=Math.max(right,px+path.width/2);}p.applyMatrix(-1,0,0,1,left+right,0);}
           p.noFill();p.stroke(item.color);p.strokeCap(p.PROJECT??'square');p.strokeJoin(p.MITER??'miter');
           for(const path of paths){p.strokeWeight(path.width);p.beginShape();for(const point of path.points)p.vertex(...point);p.endShape();}
         }
@@ -1359,12 +1367,12 @@
       if (isContext(options) && args.length === offset + 3) { p = options; options = {}; }
       number(x, 'x'); number(y, 'y');
       if (!options || Array.isArray(options)) throw new TypeError(name + ' options must be an object');
-      const allowed = ['color', 'angle', 'scale', 'size', 'weight', 'proportion', 'spacing', 'leading'];
+      const allowed = ['color', 'angle', 'scale', 'mirror', 'size', 'weight', 'proportion', 'spacing', 'leading'];
       if (name === 'riss') allowed.push('amount', 'seed');
       if (name === 'andruck') allowed.push('ink', 'paper', 'seed');
-      for (const key of Object.keys(options)) if (!allowed.includes(key)) throw new RangeError('Unknown ' + name + ' option: ' + key);
-      const placement = { x, y, color: options.color ?? palette.ink, angle: options.angle ?? 0, scale: options.scale ?? 1 };
-      colour(placement.color); number(placement.angle, 'angle'); number(placement.scale, 'scale', .001);
+      for (const key of Object.keys(options)) if (!allowed.includes(key)) throw new RangeError('Unknown ' + name + ' option: ' + key + '. ' + (['rotation', 'rotate'].includes(key) ? 'Use angle, in degrees.' : name + ' accepts ' + allowed.join(', ') + '.'));
+      const placement = { x, y, color: options.color ?? palette.ink, angle: options.angle ?? 0, scale: options.scale ?? 1, mirror: options.mirror ?? false };
+      colour(placement.color); number(placement.angle, 'angle'); number(placement.scale, 'scale', .001); boolean(placement.mirror, 'mirror');
       if (!p || typeof p.push !== 'function' || typeof p.applyMatrix !== 'function') throw new TypeError(name + ' needs a p5 drawing context');
       let material;
       if (name === 'bauteil') material = bauteil(source, args[0], options);

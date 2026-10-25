@@ -6,9 +6,22 @@
   <title>Research - p5.merz</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="library.css?v=setzkasten-1">
-<script defer src="../docs/navigation.js"></script></head>
+  <script defer src="example-source.js"></script>
+  <style>
+    .example-list > section {
+      margin: 40px 0 64px;
+    }
+    .example-list iframe {
+      display: block;
+      width: 100%;
+      border: 0;
+    }
+  </style>
+  <script defer src="code-style.js"></script>
+  <script defer src="../docs/navigation.js"></script>
+</head>
 <body>
-  <header><a class="brand" href="../index.html">p5.merz</a><span>A graphical “Ursonate” for p5.js.</span></header>
+  <header><a class="brand" href="../index.html">p5.merz</a><span>Letters, fragments and shapes for your own p5 sketch.</span></header>
   <nav class="study-nav" aria-label="p5.merz pages">
       <a href="../index.html#showcase">Showcase</a>
       <a href="examples.html">Examples</a>
@@ -18,40 +31,455 @@
       <a href="about.html">About</a>
       <a href="https://github.com/seb-prjcts-be/p5.merz">GitHub</a>
     </nav>
-  <main class="wide">
-    <h1>Research</h1><p><a href="../experiments/README.md">Study index</a> - current examples and earlier comparisons.</p><p><a href="fundsachen.html">Fundsachen catalogue</a> - numbered samples with source pages and code.</p><h2><a href="../experiments/merz-stempel/">Stempel</a></h2><p>One function, three materials: a word, a split word and a letter part.</p>
-    <p>Small studies behind p5.merz. Start with a sketch: change a word, draw a part, write a loop. These experiments help us decide what belongs in the library.</p>
-    <h2><a href="../experiments/merz-sheet/usage-study.html">Contexts and layers</a></h2><p>Compare a target option, a bound context and a layer helper with the current drawing route.</p>
-    <h2><a href="../experiments/merz-parts/module-parts.html">Drawing with letter parts</a></h2>
-    <p>Choose a letter from A to Z, pick one of its parts and repeat it with ordinary p5 code. This is the current alphabet study.</p>
-    <p><a href="../experiments/merz-parts/adapter.html">Inspect available parts</a> &middot; <a href="../experiments/merz-parts/index.html">Earlier path-index sketch</a></p>
-    <p>Draw with geometry and parts: <a href="../experiments/merz-parts/module-start.html">start with a word</a> or <a href="../experiments/merz-parts/module-parts.html">draw with a named part</a>.</p>
-    <h2><a href="../experiments/merz-pages/">Three clean pages</a></h2>
-    <p>Scale, overlapping text, rules and open space, with pages from Merz as references. The sketches are our own compositions; each page links to its source.</p>
-    <ul>
-      <li><a href="../experiments/merz-pages/large-small.html">Large and small</a></li>
-      <li><a href="../experiments/merz-pages/text-rules.html">Text and rules</a></li>
-      <li><a href="../experiments/merz-pages/open-page.html">Open page</a></li>
-    </ul>
-    <h2><a href="../experiments/merz-fragments/">Scanned fragments</a></h2>
-    <p>A cropped letter or rule from a Merz scan, placed with ordinary p5 image calls. Try the <a href="../experiments/merz-fragments/">M</a>, <a href="../experiments/merz-fragments/r.html">R</a> or <a href="../experiments/merz-fragments/rule.html">rule</a>. The <a href="../experiments/merz-fragments/sources.md">source record</a> gives the crop coordinates and credits.</p>
-    <h2><a href="../experiments/merz-surface/edge-comparison.html">Ink at the edges</a></h2><p>Draw with filled letters and shapes, then try small interruptions and excess ink at their edges.</p>
-      <h2><a href="../experiments/merz-surface/draw-ink.html">Draw first, then change the ink</a></h2>
-      <p>Write the drawing and apply a surface treatment in the same sketch. Ordinary p5 shapes and text share an ink layer.</p>
-      <h2><a href="../experiments/merz-surface/">Printing and ageing</a></h2>
-    <p>Compare clean ink, printing differences and a separate ageing study on the same composition. Amount and seed can be changed while the arrangement stays fixed. These surface treatments currently produce pixels; SVG does not include them.</p>
-    <p><a href="../experiments/merz-surface/">Compare the surfaces</a> &middot; <a href="../experiments/merz-print/">First ink study and two drawing routes</a></p>
-    <h2><a href="../experiments/merz-material/paper-fields.html">Paper at three scales</a></h2><p>Compare isolated grain with connected fibres and soft tonal differences under the same drawing. The connected field became the paper of andruck() on 11 October 2026; the measurements are in the study notes.</p>
-    <h2>Small surface differences</h2><p><a href="../experiments/merz-sheet/compare.html">Compare clean and lightly treated paper and ink</a>. The library handles the surface; the sketch chooses its materials and draws the page.</p><h2>Fragments in the library</h2><p><a href="examples.html#fragment-scan">A scan, a word and a letter part</a> use ausschnitt(), splitter() and riss(). Use rundschnitt() for an oval or schnitt() for your own convex outline. Each sketch arranges the pieces with p5. <a href="guide.html#fragments">API and limits</a>.</p><h2>Different materials</h2><p>Three complete sketches explore scanned print beside invented marks, syllables in different typefaces, and irregular shapes with openings and curved connections. <a href="examples.html#clippings">See the three working studies</a>. Their drawing helpers remain in the sketches while we learn which operations are useful.</p>
-    <h2>Earlier studies</h2>
-    <ul>
-      <li><a href="../experiments/letter-atlas/">Letter atlas</a> - compare the letter constructions.</li>
-      <li><a href="../experiments/letter-as-plane/">Letter as plane</a> - the first grid study.</li>
-      <li><a href="../experiments/page-study/">Page study</a> - text, spacing and reading direction.</li>
-    </ul>
-    <h2>Paper, contours and ink</h2><p><a href="../experiments/merz-material/">Compare the five material studies</a>: actual contour changes, shader ink and a separate paper ground. The shaders treat ink only; the paper ran on the CPU and now lives in the library. The sketch and repeatability checks are on the page.</p>
-    <h2>Sources</h2>
-    <p>The <a href="../assets/fundsachen/SOURCES.md">Fundsachen source record</a> gives credits and crop coordinates. For the library API, see the <a href="guide.html">Guide</a>.</p>
-  </main>
-</body>
+  <main class="wide example-list">
+    <h1>Research</h1>
+    <p>Small studies behind p5.merz. Each one isolates a single visual idea, with its code beside the drawing, so you can see how it works and take it into your own sketch. These studies decided what belongs in the library; the <a href="guide.html">Guide</a> describes what came out of them.</p>
+
+
+      <section id="catalogue-samples">
+        <h2>Catalogue samples</h2>
+        <p>Load found pieces by number or name from the <a href="fundsachen.html">Fundsachen catalogue</a>.</p>
+        <div class="demo-layout">
+          <div class="demo-code"><pre><code class="language-javascript" data-source="../experiments/merz-fundsachen/sketch.js">Loading source...</code></pre></div>
+          <div class="demo-right"><iframe title="Catalogue samples" src="../experiments/merz-fundsachen/index.html?preview=1" style="aspect-ratio:600/760" loading="lazy"></iframe></div>
+        </div>
+      </section>
+
+      <section id="stempel">
+        <h2>Stempel</h2>
+        <p>Repeat a word, a cut strip and a letter part. Each placement comes from the sketch.</p>
+        <div class="demo-layout">
+          <div class="demo-code"><pre><code class="language-javascript" data-source="../experiments/merz-stempel/sketch.js">Loading source...</code></pre></div>
+          <div class="demo-right">
+            <h3>Repeated words</h3>
+            <iframe title="Stempel study 1" src="../experiments/merz-stempel/sketch.html?preview=1&amp;study=0" style="aspect-ratio:600/760" loading="lazy"></iframe>
+            <h3>Cut strips</h3>
+            <iframe title="Stempel study 2" src="../experiments/merz-stempel/sketch.html?preview=1&amp;study=1" style="aspect-ratio:600/760" loading="lazy"></iframe>
+            <h3>Stepped parts</h3>
+            <iframe title="Stempel study 3" src="../experiments/merz-stempel/sketch.html?preview=1&amp;study=2" style="aspect-ratio:600/760" loading="lazy"></iframe>
+          </div>
+        </div>
+        <p><a href="guide.html#stempel">Stempel reference</a></p>
+      </section>
+
+      <section id="fundsachen">
+        <h2>Paper and ink</h2>
+        <p>
+          A quiet surface on separate paper and ink layers. Change the two amounts in
+          the code.
+        </p>
+        <div class="demo-layout">
+          <div class="demo-code">
+            <pre><code class="language-javascript" data-source="../experiments/merz-sheet/sketch.js">Loading source...</code></pre>
+          </div>
+          <div class="demo-right">
+            <iframe
+              title="Paper and ink"
+              src="../experiments/merz-sheet/index.html?preview=1"
+              style="aspect-ratio: 600/760"
+              loading="lazy"
+            ></iframe>
+          </div>
+        </div>
+        <p><a href="../experiments/merz-sheet/">Sketch notes</a></p>
+      </section>
+
+      <section id="fragment-scan">
+        <h2>A scan, cut and repeated</h2>
+        <p>
+          Change amount and seed, or change the crop position and size. The library cuts the scan and
+          changes its edge; p5 places the pieces.
+        </p>
+        <div class="demo-layout">
+          <div class="demo-code">
+            <pre><code class="language-javascript" data-source="../experiments/merz-fragment-route/scan.js">Loading source...</code></pre>
+          </div>
+          <div class="demo-right">
+            <iframe
+              title="A scan, cut and repeated"
+              src="../experiments/merz-fragment-route/scan.html?preview=1"
+              style="aspect-ratio: 600/680"
+              loading="lazy"
+            ></iframe>
+          </div>
+        </div>
+        <p><a href="../experiments/merz-fragment-route/scan.html">Sketch notes</a></p>
+      </section>
+
+      <section id="fragment-word">
+        <h2>A word through three cuts</h2>
+        <p>
+          Change the word, amount and seed. Each strip comes from the same word
+          geometry; p5 separates and offsets the resulting images.
+        </p>
+        <div class="demo-layout">
+          <div class="demo-code">
+            <pre><code class="language-javascript" data-source="../experiments/merz-fragment-route/word.js">Loading source...</code></pre>
+          </div>
+          <div class="demo-right">
+            <iframe
+              title="A word through three cuts"
+              src="../experiments/merz-fragment-route/word.html?preview=1"
+              style="aspect-ratio: 600/680"
+              loading="lazy"
+            ></iframe>
+          </div>
+        </div>
+        <p><a href="../experiments/merz-fragment-route/word.html">Sketch notes</a></p>
+      </section>
+
+      <section id="fragment-part">
+        <h2>A part becomes a field</h2>
+        <p>
+          Change the letter part, amount and seed. An oval cut from an R bowl becomes a repeated
+          field, with placement and rotation in p5.
+        </p>
+        <div class="demo-layout">
+          <div class="demo-code">
+            <pre><code class="language-javascript" data-source="../experiments/merz-fragment-route/part.js">Loading source...</code></pre>
+          </div>
+          <div class="demo-right">
+            <iframe
+              title="A part becomes a field"
+              src="../experiments/merz-fragment-route/part.html?preview=1"
+              style="aspect-ratio: 600/680"
+              loading="lazy"
+            ></iframe>
+          </div>
+        </div>
+        <p><a href="../experiments/merz-fragment-route/part.html">Sketch notes</a></p>
+      </section>
+
+      <section id="clippings">
+        <h2>Clippings and impressions</h2>
+        <p>
+          Change ticketNumber, the crop outline or the positions of the impressions. A
+          scanned page sits beside marks drawn in p5.
+        </p>
+        <div class="demo-layout">
+          <div class="demo-code">
+            <pre><code class="language-javascript" data-source="../experiments/merz-materials/clippings.js">Loading source...</code></pre>
+          </div>
+          <div class="demo-right">
+            <iframe
+              title="Clippings and impressions - live sketch"
+              src="../experiments/merz-materials/clippings.html?preview=1"
+              style="aspect-ratio: 600/720"
+              loading="lazy"
+            ></iframe>
+          </div>
+        </div>
+        <p>
+          <a href="../experiments/merz-materials/clippings.js">Source sketch</a> &middot;
+          <a href="../experiments/merz-materials/clippings.html">Sketch notes and dependencies</a>
+        </p>
+      </section>
+
+      <section id="syllables">
+        <h2>Syllables on a page</h2>
+        <p>
+          Change the syllables and repetitions. Serif text, a diagonal sequence and a
+          letter part each have their own scale.
+        </p>
+        <div class="demo-layout">
+          <div class="demo-code">
+            <pre><code class="language-javascript" data-source="../experiments/merz-materials/syllables.js">Loading source...</code></pre>
+          </div>
+          <div class="demo-right">
+            <iframe
+              title="Syllables on a page - live sketch"
+              src="../experiments/merz-materials/syllables.html?preview=1"
+              style="aspect-ratio: 600/720"
+              loading="lazy"
+            ></iframe>
+          </div>
+        </div>
+        <p>
+          <a href="../experiments/merz-materials/syllables.js">Source sketch</a> &middot;
+          <a href="../experiments/merz-materials/syllables.html">Sketch notes and dependencies</a>
+        </p>
+      </section>
+
+      <section id="connections">
+        <h2>Openings and connections</h2>
+        <p>
+          Change opening, threads or the polygon points. The hole reveals earlier
+          layers; the thin lines keep their curves.
+        </p>
+        <div class="demo-layout">
+          <div class="demo-code">
+            <pre><code class="language-javascript" data-source="../experiments/merz-materials/connections.js">Loading source...</code></pre>
+          </div>
+          <div class="demo-right">
+            <iframe
+              title="Openings and connections - live sketch"
+              src="../experiments/merz-materials/connections.html?preview=1"
+              style="aspect-ratio: 600/720"
+              loading="lazy"
+            ></iframe>
+          </div>
+        </div>
+        <p>
+          <a href="../experiments/merz-materials/connections.js">Source sketch</a> &middot;
+          <a href="../experiments/merz-materials/connections.html">Sketch notes and dependencies</a>
+        </p>
+      </section>
+
+      <section id="large-and-small">
+        <h2>Large and small</h2>
+        <p>
+          Change the word, scale and position. Ordinary p5 text keeps its own voice.
+        </p>
+        <div class="demo-layout">
+          <div class="demo-code">
+            <pre><code class="language-javascript" data-source="../experiments/merz-pages/large-small.js">Loading source...</code></pre>
+          </div>
+          <div class="demo-right">
+            <iframe
+              title="Large and small - live sketch"
+              src="../experiments/merz-pages/large-small.html?preview=1"
+              style="aspect-ratio: 600/840"
+              loading="lazy"
+            ></iframe>
+          </div>
+        </div>
+        <p>
+          <a href="../experiments/merz-pages/large-small.js">Source sketch</a> &middot;
+          <a href="../experiments/merz-pages/large-small.html">Sketch notes and dependencies</a>
+        </p>
+      </section>
+
+      <section id="text-and-rules">
+        <h2>Text and rules</h2>
+        <p>Change the text lines and the space between the rules.</p>
+        <div class="demo-layout">
+          <div class="demo-code">
+            <pre><code class="language-javascript" data-source="../experiments/merz-pages/text-rules.js">Loading source...</code></pre>
+          </div>
+          <div class="demo-right">
+            <iframe
+              title="Text and rules - live sketch"
+              src="../experiments/merz-pages/text-rules.html?preview=1"
+              style="aspect-ratio: 600/840"
+              loading="lazy"
+            ></iframe>
+          </div>
+        </div>
+        <p>
+          <a href="../experiments/merz-pages/text-rules.js">Source sketch</a> &middot;
+          <a href="../experiments/merz-pages/text-rules.html">Sketch notes and dependencies</a>
+        </p>
+      </section>
+
+      <section id="open-page">
+        <h2>Open page</h2>
+        <p>
+          Two groups leave a large interval. Move them in the sketch and see how the
+          page changes.
+        </p>
+        <div class="demo-layout">
+          <div class="demo-code">
+            <pre><code class="language-javascript" data-source="../experiments/merz-pages/open-page.js">Loading source...</code></pre>
+          </div>
+          <div class="demo-right">
+            <iframe
+              title="Open page - live sketch"
+              src="../experiments/merz-pages/open-page.html?preview=1"
+              style="aspect-ratio: 900/600"
+              loading="lazy"
+            ></iframe>
+          </div>
+        </div>
+        <p>
+          <a href="../experiments/merz-pages/open-page.js">Source sketch</a> &middot;
+          <a href="../experiments/merz-pages/open-page.html">Sketch notes and dependencies</a>
+        </p>
+      </section>
+
+      <section id="letters-and-ink">
+        <h2>Letters and ink</h2>
+        <p>
+          Geometric letters, ordinary p5 text and a cut-out word. This sketch also loads
+          composition.js and ink.js from its folder.
+        </p>
+        <div class="demo-layout">
+          <div class="demo-code">
+            <pre><code class="language-javascript" data-source="../experiments/merz-print/sketch.js">Loading source...</code></pre>
+          </div>
+          <div class="demo-right">
+            <iframe
+              title="Letters and ink - live sketch"
+              src="../experiments/merz-print/sketch.html?preview=1"
+              style="aspect-ratio: 600/840"
+              loading="lazy"
+            ></iframe>
+          </div>
+        </div>
+        <p>
+          <a href="../experiments/merz-print/sketch.js">Source sketch</a> &middot;
+          <a href="../experiments/merz-print/sketch.html">Sketch notes and dependencies</a>
+        </p>
+      </section>
+
+      <section id="scanned-fragments">
+        <h2>Scanned fragments</h2>
+        <p>
+          Change the crop and its positions with ordinary p5 image calls. Keep the
+          source image in the assets folder.
+        </p>
+        <div class="demo-layout">
+          <div class="demo-code">
+            <pre><code class="language-javascript" data-source="../experiments/merz-fragments/sketch.js">Loading source...</code></pre>
+          </div>
+          <div class="demo-right">
+            <iframe
+              title="Scanned fragments - live sketch"
+              src="../experiments/merz-fragments/index.html?preview=1"
+              style="aspect-ratio: 600/840"
+              loading="lazy"
+            ></iframe>
+          </div>
+        </div>
+        <p>
+          <a href="../experiments/merz-fragments/sketch.js">Source sketch</a> &middot;
+          <a href="../experiments/merz-fragments/index.html">Sketch notes and dependencies</a>
+        </p>
+      </section>
+
+      <section id="one-letter-separate-parts">
+        <h2>One letter, separate parts</h2>
+        <p>Colour and repeat a crossbar using the current geometry.</p>
+        <div class="demo-layout">
+          <div class="demo-code">
+            <pre><code class="language-javascript" data-source="../experiments/merz-parts/sketch.js">Loading source...</code></pre>
+          </div>
+          <div class="demo-right">
+            <iframe
+              title="One letter, separate parts - live sketch"
+              src="../experiments/merz-parts/index.html?preview=1"
+              style="aspect-ratio: 600/840"
+              loading="lazy"
+            ></iframe>
+          </div>
+        </div>
+        <p>
+          <a href="../experiments/merz-parts/sketch.js">Source sketch</a> &middot;
+          <a href="../experiments/merz-parts/index.html">Sketch notes and dependencies</a>
+        </p>
+      </section>
+
+      <section id="draw-with-a-named-part">
+        <h2>Draw with a named part</h2>
+        <p>
+          Choose a letter and one of its parts, then repeat it in a p5 loop. The library
+          supplies the paths; the sketch draws them.
+        </p>
+        <div class="demo-layout">
+          <div class="demo-code">
+            <pre><code class="language-javascript" data-source="../experiments/merz-parts/module-parts.js">Loading source...</code></pre>
+          </div>
+          <div class="demo-right">
+            <iframe
+              title="Draw with a named part - live sketch"
+              src="../experiments/merz-parts/module-parts.html?preview=1"
+              style="aspect-ratio: 1"
+              loading="lazy"
+            ></iframe>
+          </div>
+        </div>
+        <p>
+          <a href="../experiments/merz-parts/module-parts.js">Source sketch</a> &middot;
+          <a href="../experiments/merz-parts/module-parts.html">Sketch notes and dependencies</a>
+        </p>
+      </section>
+
+      <section id="ink-at-the-edges">
+        <h2>Ink at the edges</h2>
+        <p>
+          Draw the shapes yourself. Change edgeAmount and edgeSeed to study imperfect
+          edges. This sketch also loads edges.js.
+        </p>
+        <div class="demo-layout">
+          <div class="demo-code">
+            <pre><code class="language-javascript" data-source="../experiments/merz-surface/edge-sketch.js">Loading source...</code></pre>
+          </div>
+          <div class="demo-right">
+            <iframe
+              title="Ink at the edges - live sketch"
+              src="../experiments/merz-surface/edge-sketch.html?preview=1"
+              style="aspect-ratio: 1"
+              loading="lazy"
+            ></iframe>
+          </div>
+        </div>
+        <p>
+          <a href="../experiments/merz-surface/edge-sketch.js">Source sketch</a> &middot;
+          <a href="../experiments/merz-surface/edge-sketch.html">Sketch notes and dependencies</a>
+        </p>
+      </section>
+
+      <section id="draw-first-then-change-the-ink">
+        <h2>Draw first, then change the ink</h2>
+        <p>
+          The complete drawing and separate print and age settings share one sketch.
+          Load ink.js and surface.js as described in the sketch notes.
+        </p>
+        <div class="demo-layout">
+          <div class="demo-code">
+            <pre><code class="language-javascript" data-source="../experiments/merz-surface/draw-ink.js">Loading source...</code></pre>
+          </div>
+          <div class="demo-right">
+            <iframe
+              title="Draw first, then change the ink - live sketch"
+              src="../experiments/merz-surface/draw-ink.html?preview=1"
+              style="aspect-ratio: 1"
+              loading="lazy"
+            ></iframe>
+          </div>
+        </div>
+        <p>
+          <a href="../experiments/merz-surface/draw-ink.js">Source sketch</a> &middot;
+          <a href="../experiments/merz-surface/draw-ink.html">Sketch notes and dependencies</a>
+        </p>
+      </section>
+
+      <section id="printing-and-ageing">
+        <h2>Printing and ageing</h2>
+        <p>
+          Independent amounts treat the same composition. This comparison sketch loads
+          the shared composition and surface helpers.
+        </p>
+        <div class="demo-layout">
+          <div class="demo-code">
+            <pre><code class="language-javascript" data-source="../experiments/merz-surface/both.js">Loading source...</code></pre>
+          </div>
+          <div class="demo-right">
+            <iframe
+              title="Printing and ageing - live sketch"
+              src="../experiments/merz-surface/both.html?preview=1"
+              style="aspect-ratio: 600/840"
+              loading="lazy"
+            ></iframe>
+          </div>
+        </div>
+        <p>
+          <a href="../experiments/merz-surface/both.js">Source sketch</a> &middot;
+          <a href="../experiments/merz-surface/both.html">Sketch notes and dependencies</a>
+        </p>
+      </section>
+
+      <h2 id="earlier">Earlier studies and comparisons</h2>
+      <p>Older routes, kept online for comparison. Their local helpers do not define the library API; the <a href="../experiments/README.md">study index</a> says what each folder still has to offer.</p>
+      <ul>
+        <li><a href="../experiments/merz-sheet/usage-study.html">Contexts and layers</a>: a target option, a bound context and a layer helper compared with the current drawing route.</li>
+        <li><a href="../experiments/merz-parts/adapter.html">Inspect available parts</a> and the <a href="../experiments/merz-parts/index.html">earlier path-index sketch</a>; <a href="../experiments/merz-parts/module-start.html">start with a word</a>.</li>
+        <li><a href="../experiments/merz-fragments/">Scanned fragments by explicit crop</a>: the <a href="../experiments/merz-fragments/">M</a>, the <a href="../experiments/merz-fragments/r.html">R</a>, the <a href="../experiments/merz-fragments/rule.html">rule</a> and their <a href="../experiments/merz-fragments/sources.md">source record</a>. Fundsachen now provides numbered samples.</li>
+        <li><a href="../experiments/merz-surface/">Printing and ageing compared</a> on fixed compositions, and the <a href="../experiments/merz-print/">first ink study with two drawing routes</a>. These surface treatments produce pixels; SVG does not include them.</li>
+        <li><a href="../experiments/merz-material/paper-fields.html">Paper at three scales</a>: isolated grain, connected fibres and soft tonal differences. The connected field became the paper of <code>andruck()</code> on 11 October 2026; the measurements are in the study notes. <a href="../experiments/merz-material/">The five material studies</a> also compare contour changes and shader ink.</li>
+        <li><a href="../experiments/letter-atlas/">Letter atlas</a>, <a href="../experiments/letter-as-plane/">letter as plane</a> and <a href="../experiments/page-study/">page study</a>: the letter constructions, the first grid and the first reading-direction tests.</li>
+      </ul>
+      <h2 id="sources">Sources</h2>
+      <p>The <a href="../assets/fundsachen/SOURCES.md">Fundsachen source record</a> gives credits and crop coordinates for every found piece.</p>
+    </main>
+  </body>
 </html>

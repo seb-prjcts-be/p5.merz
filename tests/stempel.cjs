@@ -59,8 +59,17 @@ for (const file of ['p5.merz.js', 'p5.merz.min.js']) {
   assert.deepEqual(calls.filter(c=>c[0]==='applyMatrix').map(c=>c.slice(5)),[[-10,42],[-160,100],[-10,158],[-160,216]]);
   assert.deepEqual(calls.filter(c=>c[0]==='stroke').map(c=>c[1]),['#b92d26','#20201e','#b92d26','#20201e']);
   calls.length=0;
-  for(const options of [{repeat:0},{repeat:1025},{color:[]},{angle:[0,NaN]},{scale:[1,0]},{stepY:Infinity}])assert.throws(()=>m.stempel(word,0,0,options,p));
+  for(const options of [{repeat:0},{repeat:1025},{color:[]},{angle:[0,NaN]},{scale:[1,0]},{stepY:Infinity},{mirror:'yes'},{mirror:[true,1]},{rotation:90}])assert.throws(()=>m.stempel(word,0,0,options,p));
   assert.equal(calls.length,0);
+  assert.throws(()=>m.stempel(word,0,0,{rotation:90},p),/angle, in degrees/);
+  // mirror turns a piece over within its own bounds: a second matrix with -1 on x, placed at left + right.
+  calls.length=0; m.stempel(word,10,20,{mirror:true},p);
+  const mirrored=calls.filter(c=>c[0]==='applyMatrix');assert.equal(mirrored.length,2);assert.equal(mirrored[1][1],-1);assert.ok(mirrored[1][5]>word.width-1&&mirrored[1][5]<word.width+word.paths[0].width+1);
+  calls.length=0; m.stempel(word,10,20,{repeat:2,stepX:50,mirror:[false,true]},p);
+  assert.equal(calls.filter(c=>c[0]==='applyMatrix').length,3);
+  calls.length=0; m.stempel('AB',0,0,{mirror:true},p);
+  assert.deepEqual(calls.filter(c=>c[0]==='applyMatrix')[1].slice(1),[-1,0,0,1,20,0]);
+  calls.length=0;
   const textBroken={...p,text(){throw new Error('text failed');}};
   assert.throws(()=>m.stempel('x',{x:0,y:0},textBroken));
   assert.equal(calls.at(-1)[0],'pop');
