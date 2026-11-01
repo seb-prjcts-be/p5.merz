@@ -65,6 +65,10 @@ Change the word, the number of strips or a seed and run again.
 
 `await Merz.fundsachen('001')` loads a found piece from the catalogue (28 cropped letters, numerals, words, rules and printed marks from *Merz* 2 and *Merz* 8/9) as a fragment for `stempel()` and `riss()`; `await Merz.fundsachen('001', x, y, width)` draws it straight away. Every piece has a transparent PNG download, and 17 also include an SVG silhouette. [Catalogue](https://seb-prjcts-be.github.io/p5.merz/docs/fundsachen.html).
 
+## A sheet or a column that grows
+
+`Merz.blatt({ seed })` is a sheet with time: `blatt.fund(source, options)` places any of the materials above at the current year, `blatt.jahr()` moves on, `blatt.ueberbauen({ deckend })` covers part of the page with planes, and `blatt.zeichne({ jahr })` draws the state up to a year. `Merz.bau({ seed, grund })` is the same idea as a column in WEBGL mode: letters become beams, text from a p5.Font is extruded, images stand as planes, `bau.gips({ deels, open })` covers everything so far with faceted plaster, and `bau.zeichne({ jahr, schnitt })` draws the column up to a year, with a cut that takes the plaster away. Pieces without a position are placed from the seed, so the same calls give the same work. [A sheet or a column that grows](https://seb-prjcts-be.github.io/p5.merz/docs/guide.html#werk).
+
 ## Composition and SVG
 
 `Merz.create()` keeps geometric letters, lines and planes as elements with ids, edits them later and exports editable SVG without font dependencies. Most sketches draw directly on the canvas and do not need a stored composition; it is there when you want clean vectors. [Composition](https://seb-prjcts-be.github.io/p5.merz/docs/guide.html#keep-a-composition).
@@ -85,7 +89,7 @@ Each page shows its code beside the drawing, with a button to copy the sketch. T
 
 ## Public API
 
-`Merz.ready()`, `settings()`, `satz()`, `bauteile()`, `bauteil()`, `ausschnitt()`, `rundschnitt()`, `schnitt()`, `splitter()`, `riss()`, `andruck()`, `stempel()`, `fundsachen()`, `create()`, with `Merz.farbe`, `Merz.palette`, `Merz.characters` and `Merz.version`. The [function reference](https://seb-prjcts-be.github.io/p5.merz/docs/guide.html#api-reference) lists arguments and return values.
+`Merz.ready()`, `settings()`, `satz()`, `bauteile()`, `bauteil()`, `ausschnitt()`, `rundschnitt()`, `schnitt()`, `splitter()`, `riss()`, `andruck()`, `stempel()`, `fundsachen()`, `blatt()`, `bau()`, `schrift()`, `create()`, with `Merz.farbe`, `Merz.palette`, `Merz.characters` and `Merz.version`. The [function reference](https://seb-prjcts-be.github.io/p5.merz/docs/guide.html#api-reference) lists arguments and return values.
 
 ## Test
 

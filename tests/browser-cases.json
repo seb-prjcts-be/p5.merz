@@ -13,6 +13,8 @@
   "surface-library-browser.html",
   "surface-library-min-browser.html",
   "audit-browser.html?min=1",
+  "werk-browser.html",
+  "werk-min-browser.html",
   "direct-browser.html",
   "direct-min-browser.html",
   "examples-browser.html"

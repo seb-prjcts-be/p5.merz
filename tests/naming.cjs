@@ -6,7 +6,7 @@ for (const file of ['p5.merz.js','p5.merz.min.js']) {
   assert.deepEqual(Object.keys(ctx).sort(), ['Merz', 'MerzComposition']);
   assert.equal(ctx.Merz.version, '0.3.0');
   for(const oldName of ['geometry','parts','part','fragment','tear','surface','toImage']) assert.equal(Object.hasOwn(ctx.Merz,oldName),false);
-  for (const name of ['satz', 'bauteile', 'bauteil', 'schnitt', 'riss', 'andruck', 'ausschnitt', 'rundschnitt']) assert.equal(typeof ctx.Merz[name], 'function');
+  for (const name of ['satz', 'bauteile', 'bauteil', 'schnitt', 'riss', 'andruck', 'ausschnitt', 'rundschnitt', 'blatt', 'bau', 'schrift']) assert.equal(typeof ctx.Merz[name], 'function');
   assert.equal(typeof ctx.Merz.riss,'function');
   const farbe = ctx.Merz.settings();
   assert.deepEqual(ctx.Merz.farbe, farbe);

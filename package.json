@@ -3,7 +3,7 @@
   "version": "0.3.0",
   "private": true,
   "scripts": {
-    "test": "node tests/geometry.cjs && node tests/bars.cjs && node tests/library.cjs && node tests/generated-contract.cjs && node tests/punctuation.cjs && node tests/merz-ink.cjs && node tests/merz-surface.cjs && node tests/merz-parts.cjs && node tests/merz-edges.cjs && node tests/fragments.cjs && node tests/naming.cjs && node tests/surface.cjs && node tests/stempel.cjs && node tests/fundsachen.cjs && node tests/build.cjs && node tests/browser-manifest.cjs && node tests/fonts.cjs",
+    "test": "node tests/geometry.cjs && node tests/bars.cjs && node tests/library.cjs && node tests/generated-contract.cjs && node tests/punctuation.cjs && node tests/merz-ink.cjs && node tests/merz-surface.cjs && node tests/merz-parts.cjs && node tests/merz-edges.cjs && node tests/fragments.cjs && node tests/naming.cjs && node tests/surface.cjs && node tests/stempel.cjs && node tests/fundsachen.cjs && node tests/werk.cjs && node tests/build.cjs && node tests/browser-manifest.cjs && node tests/fonts.cjs",
     "build:min": "node tools/build-min.cjs",
     "sync:fundsachen": "node tools/sync-fundsachen.cjs"
   },

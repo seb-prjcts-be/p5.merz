@@ -1,5 +1,5 @@
 /* p5.merz 0.3.0 - Sebastien Vanblaere. MIT license.
- * Geometric letters, named parts, cuts, stamps and colour planes for p5.js.
+ * Geometric letters, named parts, cuts, stamps, colour planes, and a sheet or column that grows over time, for p5.js.
  */
 (function (root) {
   'use strict';
@@ -1348,6 +1348,337 @@
     result.updatePixels();
     return result;
   }
+  // Werk: pieces with a year, a seeded random source and coverings. Blatt draws it flat, Bau as a column.
+  function seededRandom(seed) {
+    let state = seed >>> 0;
+    return () => { state = (Math.imul(state, 1664525) + 1013904223) >>> 0; return state / 4294967296; };
+  }
+  const isImage = source => !!source && typeof source === 'object' && typeof source.get === 'function' && source.width > 0 && source.height > 0 && !fragmentData.has(source);
+  const isModel = source => !!source && typeof source === 'object' && Array.isArray(source.vertices) && Array.isArray(source.faces);
+  function validPaths(paths) {
+    return Array.isArray(paths) && paths.length > 0 && paths.every(path => path && Number.isFinite(path.width) && path.width > 0 && Array.isArray(path.points) && path.points.length >= 2 && path.points.every(point => Array.isArray(point) && point.length === 2 && point.every(Number.isFinite)));
+  }
+  function pathBounds(paths) {
+    const half = Math.max(...paths.map(path => path.width)) / 2;
+    const xs = paths.flatMap(path => path.points.map(point => point[0])), ys = paths.flatMap(path => path.points.map(point => point[1]));
+    const left = Math.min(...xs) - half, top = Math.min(...ys) - half;
+    return { left, top, width: Math.max(...xs) + half - left, height: Math.max(...ys) + half - top };
+  }
+  const materialKeys = ['size', 'weight', 'proportion', 'spacing', 'leading', 'font', 'stretch'];
+  // Every material becomes the same kind of record, with its own width and height.
+  function material(source, options, route) {
+    if (typeof source === 'string') {
+      if (options.font !== undefined) {
+        const size = number(options.size ?? 32, 'size', .001), weight = number(options.weight ?? 800, 'weight', 100), stretch = number(options.stretch ?? 100, 'stretch', 62);
+        if (weight > 900) throw new RangeError('weight must be between 100 and 900');
+        if (stretch > 125) throw new RangeError('stretch must be between 62 and 125');
+        if (route === 'bau') { if (!options.font || typeof options.font.textToModel !== 'function') throw new TypeError('bau text needs a p5.Font; use await Merz.schrift(\'grotesk\')'); }
+        else if (typeof options.font !== 'string' || !options.font.trim()) throw new TypeError('font must be grotesk, antiqua or a loaded font family name');
+        const lines = source.split('\n');
+        return { kind: 'text', text: source, font: options.font, size, weight, stretch, width: size * .6 * Math.max(...lines.map(line => line.length)), height: size * (1 + 1.2 * (lines.length - 1)) };
+      }
+      const geometry = satz(source, Object.fromEntries(['size', 'weight', 'proportion', 'spacing', 'leading'].filter(key => options[key] !== undefined).map(key => [key, options[key]])));
+      if (!geometry.paths.length) throw new RangeError('fund needs at least one character');
+      return { kind: 'paths', paths: geometry.paths, ...pathBounds(geometry.paths) };
+    }
+    if (fragmentData.has(source)) return { kind: 'fragment', piece: source, width: source.width, height: source.height };
+    const paths = Array.isArray(source) ? source.flatMap(part => part?.paths || []) : source?.paths;
+    if (paths !== undefined) {
+      if (!validPaths(paths)) throw new TypeError('fund needs valid paths');
+      return { kind: 'paths', paths: copy(paths), ...pathBounds(paths) };
+    }
+    if (isImage(source)) return { kind: 'image', image: source, width: source.width, height: source.height };
+    if (isModel(source)) {
+      if (route !== 'bau') throw new TypeError('a p5.Geometry is material for Merz.bau()');
+      const axis = key => { const values = source.vertices.map(vertex => vertex[key]); const min = Math.min(...values), max = Math.max(...values); return [max - min || 1, (min + max) / 2]; };
+      const [width, cx] = axis('x'), [height, cy] = axis('y'), [depth, cz] = axis('z');
+      return { kind: 'model', geometry: source, width, height, depth, center: [cx, cy, cz] };
+    }
+    throw new TypeError('fund needs text, geometry, letter parts, a cut piece, an image or a p5.Geometry');
+  }
+  function checkOptions(name, options, allowed) {
+    if (!options || typeof options !== 'object' || Array.isArray(options)) throw new TypeError(name + ' options must be an object');
+    for (const key of Object.keys(options)) if (!allowed.includes(key)) throw new RangeError('Unknown ' + name + ' option: ' + key);
+  }
+  function fraction(value, name, fallback) {
+    const result = number(value ?? fallback, name, 0);
+    if (result > 1) throw new RangeError(name + ' must be between 0 and 1');
+    return result;
+  }
+  class Werk {
+    constructor(route, options, p) {
+      if (isContext(options)) { p = options; options = {}; }
+      this._route = route; this._p = p;
+      checkOptions(route, options, this._keys);
+      const seed = options.seed ?? 1;
+      if (!Number.isSafeInteger(seed)) throw new TypeError('seed must be a safe integer');
+      this.seed = seed; this._random = seededRandom(seed);
+      this._year = 1; this._items = []; this._next = 1;
+    }
+    get jetzt() { return this._year; }
+    jahr(years = 1) {
+      if (!Number.isSafeInteger(years) || years < 1) throw new RangeError('jahr advances by a whole number of years');
+      this._year += years; return this;
+    }
+    teile() {
+      return this._items.filter(item => item.type === 'fund').map(({ material: m, type, gpu, ...rest }) => ({ kind: m.kind, width: m.width, height: m.height, ...copy(rest) }));
+    }
+    _add(item) { item.id = item.type + '-' + this._next++; item.jahr = this._year; this._items.push(item); return item.id; }
+    _until(options) {
+      const year = options.jahr ?? this._year;
+      if (!Number.isSafeInteger(year) || year < 0) throw new RangeError('jahr must be a whole number');
+      return this._items.filter(item => item.jahr <= year);
+    }
+    _context(options, p) {
+      if (isContext(options)) { p = options; options = {}; }
+      p = p === root && this._p !== root ? this._p : p;
+      if (!p || typeof p.push !== 'function') throw new TypeError(this._route + ' needs a p5 drawing context');
+      return [options || {}, p];
+    }
+  }
+  // A sheet: pieces placed in order, planes that cover part of it, drawn up to a year.
+  class Blatt extends Werk {
+    get _keys() { return ['seed', 'width', 'height']; }
+    constructor(options = {}, p = root) {
+      super('blatt', options, p);
+      if (options.width !== undefined) this.width = number(options.width, 'width', 1);
+      if (options.height !== undefined) this.height = number(options.height, 'height', 1);
+    }
+    _size(p) {
+      const width = this.width ?? p.width, height = this.height ?? p.height;
+      if (!Number.isFinite(width) || !Number.isFinite(height) || width < 1 || height < 1) throw new RangeError('blatt needs width and height, or a canvas');
+      return [width, height];
+    }
+    fund(source, options = {}) {
+      checkOptions('fund', options, ['x', 'y', 'angle', 'scale', 'color', ...materialKeys]);
+      const m = material(source, options, 'blatt');
+      const scale = number(options.scale ?? 1, 'scale', .001), angle = number(options.angle ?? 0, 'angle'), color = colour(options.color ?? palette.ink);
+      const [width, height] = this._size(this._p);
+      const x = options.x !== undefined ? number(options.x, 'x') : Math.round(this._random() * Math.max(0, width - m.width * scale));
+      const y = options.y !== undefined ? number(options.y, 'y') : Math.round(this._random() * Math.max(0, height - m.height * scale)) + (m.kind === 'text' ? m.size * scale : 0);
+      return this._add({ type: 'fund', material: m, x, y, angle, scale, color });
+    }
+    ueberbauen(options = {}) {
+      checkOptions('ueberbauen', options, ['deckend', 'teile', 'color']);
+      const deckend = fraction(options.deckend, 'deckend', .5), count = options.teile ?? 3, color = colour(options.color ?? palette.paper);
+      if (!Number.isSafeInteger(count) || count < 1 || count > 64) throw new RangeError('teile must be a whole number from 1 to 64');
+      const [width, height] = this._size(this._p);
+      const planes = [];
+      for (let i = 0; i < count; i++) {
+        const area = deckend * width * height / count, ratio = .5 + this._random() * 1.5;
+        const w = Math.min(width, Math.sqrt(area * ratio)), h = Math.min(height, area / w);
+        planes.push({ x: Math.round(this._random() * (width - w)), y: Math.round(this._random() * (height - h)), width: Math.round(w), height: Math.round(h) });
+      }
+      return this._add({ type: 'decke', planes, color });
+    }
+    zeichne(options = {}, p = root) {
+      [options, p] = this._context(options, p);
+      checkOptions('zeichne', options, ['jahr']);
+      for (const item of this._until(options)) {
+        if (item.type === 'decke') {
+          p.push(); try { p.noStroke(); p.fill(item.color); p.rectMode(p.CORNER ?? 'corner'); for (const plane of item.planes) p.rect(plane.x, plane.y, plane.width, plane.height); } finally { p.pop(); }
+          continue;
+        }
+        const m = item.material, placement = { x: item.x, y: item.y, angle: item.angle, scale: item.scale, color: item.color };
+        if (m.kind === 'paths') stempel({ paths: m.paths }, placement, p);
+        else if (m.kind === 'fragment') stempel(m.piece, placement, p);
+        else if (m.kind === 'text') stempel(m.text, { ...placement, size: m.size, font: m.font, weight: m.weight, stretch: m.stretch }, p);
+        else {
+          p.push(); try {
+            const a = item.angle * Math.PI / 180, c = Math.cos(a) * item.scale, s = Math.sin(a) * item.scale;
+            p.applyMatrix(c, s, -s, c, item.x, item.y); p.imageMode(p.CORNER ?? 'corner'); p.noTint(); p.image(m.image, 0, 0);
+          } finally { p.pop(); }
+        }
+      }
+      return this;
+    }
+  }
+  // A column: pieces at the height of their year, plaster that covers them, a cut that opens it.
+  class Bau extends Werk {
+    get _keys() { return ['seed', 'grund', 'hoehe', 'boden']; }
+    constructor(options = {}, p = root) {
+      super('bau', options, p);
+      const grund = options.grund ?? [160, 160];
+      if (!Array.isArray(grund) || grund.length !== 2) throw new TypeError('grund must be [width, depth]');
+      this.grund = [number(grund[0], 'grund width', 1), number(grund[1], 'grund depth', 1)];
+      this.hoehe = number(options.hoehe ?? 52, 'hoehe', 1);
+      this.boden = number(options.boden ?? 0, 'boden');
+    }
+    fund(source, options = {}) {
+      checkOptions('fund', options, ['x', 'y', 'z', 'drehung', 'scale', 'color', 'tiefe', 'breite', ...materialKeys]);
+      const m = material(source, options, 'bau');
+      const scale = number(options.scale ?? 1, 'scale', .001), color = colour(options.color ?? palette.ink);
+      let width = m.width, height = m.height, depth = m.depth ?? 0;
+      if (m.kind === 'image' || m.kind === 'fragment') {
+        if (options.tiefe !== undefined) throw new RangeError('tiefe applies to letters and text; images stand as planes');
+        width = number(options.breite ?? Math.min(this.grund[0], this.grund[1]) * .5, 'breite', 1);
+        height = width * m.height / m.width;
+      } else if (m.kind !== 'model') {
+        depth = number(options.tiefe ?? Math.max(4, Math.round(Math.max(width, height) * .15)), 'tiefe', .1);
+      } else if (options.tiefe !== undefined) throw new RangeError('tiefe applies to letters and text, not to a p5.Geometry');
+      if (options.breite !== undefined && m.kind !== 'image' && m.kind !== 'fragment') throw new RangeError('breite applies to images and cut pieces');
+      const radius = Math.hypot(width, height, depth) / 2 * scale;
+      const drehung = options.drehung ?? [0, [0, 90, 180, -90, 45, -45][Math.floor(this._random() * 6)], [0, 0, 0, 90, -90][Math.floor(this._random() * 5)]];
+      if (!Array.isArray(drehung) || drehung.length !== 3) throw new TypeError('drehung must be [x, y, z] in degrees');
+      drehung.forEach((value, i) => number(value, 'drehung ' + 'xyz'[i]));
+      const top = this.boden - this._year * this.hoehe, bottom = this.boden - (this._year - 1) * this.hoehe;
+      const x = options.x !== undefined ? number(options.x, 'x') : Math.round((this._random() - .5) * this.grund[0] * .7);
+      const z = options.z !== undefined ? number(options.z, 'z') : Math.round((this._random() - .5) * this.grund[1] * .7);
+      const y = options.y !== undefined ? number(options.y, 'y') : Math.round(top + this._random() * (bottom - top));
+      return this._add({ type: 'fund', material: m, x, y, z, drehung: [...drehung], scale, color, width, height, depth, radius });
+    }
+    gips(options = {}) {
+      checkOptions('gips', options, ['deels', 'open', 'color', 'rand']);
+      const deels = fraction(options.deels, 'deels', 1), open = fraction(options.open, 'open', .2), color = colour(options.color ?? '#f1efe8'), rand = number(options.rand ?? 10, 'rand', 0);
+      const pieces = this._items.filter(item => item.type === 'fund');
+      if (!pieces.length) throw new RangeError('gips needs pieces to cover');
+      const min = [Infinity, Infinity, Infinity], max = [-Infinity, -Infinity, -Infinity];
+      for (const piece of pieces) for (const [i, value] of [piece.x, piece.y, piece.z].entries()) {
+        const reach = Math.min(piece.radius, Math.max(this.grund[0], this.grund[1]) * .45);
+        min[i] = Math.min(min[i], value - reach); max[i] = Math.max(max[i], value + reach);
+      }
+      const grow = rand + this._year * 1.5;
+      min[0] -= grow; min[2] -= grow; max[0] += grow; max[2] += grow;
+      max[1] = this.boden;
+      min[1] = this.boden - deels * (this.boden - (min[1] - rand));
+      const size = Math.min(this.grund[0], this.grund[1]), bump = size * .04, tris = [], n = 3;
+      for (const [axis, sign] of [[0, 1], [0, -1], [1, -1], [2, 1], [2, -1]]) {
+        const u = (axis + 1) % 3, v = (axis + 2) % 3, grid = [];
+        for (let i = 0; i <= n; i++) {
+          grid.push([]);
+          for (let j = 0; j <= n; j++) {
+            const point = [0, 0, 0];
+            point[axis] = sign > 0 ? max[axis] : min[axis];
+            point[u] = min[u] + (max[u] - min[u]) * i / n;
+            point[v] = min[v] + (max[v] - min[v]) * j / n;
+            if (i > 0 && i < n && j > 0 && j < n) {
+              point[axis] += sign * bump * (1 + this._random() * 4);
+              point[u] += (this._random() - .5) * bump * 5; point[v] += (this._random() - .5) * bump * 5;
+            } else point[axis] += sign * bump * (this._random() * 1.5 - .5);
+            grid[i].push(point);
+          }
+        }
+        for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+          if (this._random() < open) continue;
+          const a = grid[i][j], b = grid[i + 1][j], c = grid[i + 1][j + 1], d = grid[i][j + 1];
+          for (const [p0, p1, p2] of [[a, b, c], [a, c, d]]) {
+            const e1 = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]], e2 = [p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2]];
+            const normal = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]];
+            const length = Math.hypot(...normal) || 1;
+            // Facets face away from the box; the winding keeps the lighting consistent.
+            const outward = normal[axis] * sign >= 0;
+            tris.push({ points: outward ? [p0, p1, p2] : [p0, p2, p1], normal: normal.map(k => (outward ? k : -k) / length), cx: (p0[0] + p1[0] + p2[0]) / 3 });
+          }
+        }
+      }
+      return this._add({ type: 'decke', tris, color, min, max });
+    }
+    _webgl(p) {
+      const gl = p.drawingContext;
+      if (!gl || typeof gl.drawArrays !== 'function' || typeof p.buildGeometry !== 'function') throw new TypeError('bau draws in WEBGL mode: createCanvas(width, height, WEBGL)');
+    }
+    _cut(items, schnitt) {
+      const covers = items.filter(item => item.type === 'decke');
+      if (!covers.length || schnitt === 0) return Infinity;
+      const minX = Math.min(...covers.map(item => item.min[0])), maxX = Math.max(...covers.map(item => item.max[0]));
+      return maxX + 1 - schnitt * (maxX - minX + 2);
+    }
+    // Geometry is built once per piece and drawing context, then drawn with model().
+    _prepare(item, p) {
+      if (item.gpu && item.gpu.p === p) return item.gpu;
+      const m = item.material, gpu = { p };
+      if (m.kind === 'paths') {
+        const cx = m.left + m.width / 2, cy = m.top + m.height / 2;
+        gpu.geometry = p.buildGeometry(() => {
+          for (const path of m.paths) for (let i = 1; i < path.points.length; i++) {
+            const [ax, ay] = path.points[i - 1], [bx, by] = path.points[i];
+            p.push(); p.translate((ax + bx) / 2 - cx, (ay + by) / 2 - cy, 0); p.rotateZ(Math.atan2(by - ay, bx - ax));
+            p.box(Math.hypot(bx - ax, by - ay) + path.width, path.width, item.depth); p.pop();
+          }
+        });
+      } else if (m.kind === 'text') {
+        p.push();
+        try {
+          p.textFont(m.font); p.textSize(m.size); if (typeof p.textWeight === 'function') p.textWeight(m.weight);
+          p.textAlign(p.LEFT ?? 'left', p.BASELINE ?? 'alphabetic');
+          gpu.geometry = m.font.textToModel(m.text, 0, 0, { extrude: item.depth, sampleFactor: .25 });
+        } finally { p.pop(); }
+        const box = gpu.geometry.calculateBoundingBox();
+        gpu.offset = [-(box.min.x + box.max.x) / 2, -(box.min.y + box.max.y) / 2, -(box.min.z + box.max.z) / 2];
+      } else if (m.kind === 'fragment') gpu.image = m.piece.bau(p, { color: item.color });
+      else if (m.kind === 'image') gpu.image = m.image;
+      else { gpu.geometry = m.geometry; gpu.offset = m.center.map(value => -value); }
+      item.gpu = gpu;
+      return gpu;
+    }
+    _piece(item, p, textures) {
+      const gpu = this._prepare(item, p);
+      p.push();
+      try {
+        p.translate(item.x, item.y, item.z);
+        p.rotateX(item.drehung[0] * Math.PI / 180); p.rotateY(item.drehung[1] * Math.PI / 180); p.rotateZ(item.drehung[2] * Math.PI / 180);
+        p.scale(item.scale);
+        p.noStroke();
+        if (gpu.image) {
+          if (textures) p.texture(gpu.image); else p.fill(item.color);
+          p.plane(item.width, item.height);
+        } else {
+          p.fill(item.color);
+          if (gpu.offset) p.translate(...gpu.offset);
+          p.model(gpu.geometry);
+        }
+      } finally { p.pop(); }
+    }
+    _cover(item, p, cutX) {
+      p.push();
+      try {
+        p.noStroke(); p.fill(item.color);
+        p.beginShape(p.TRIANGLES ?? 'triangles');
+        for (const tri of item.tris) {
+          if (tri.cx > cutX) continue;
+          p.normal(...tri.normal);
+          for (const point of tri.points) p.vertex(...point);
+        }
+        p.endShape();
+      } finally { p.pop(); }
+    }
+    zeichne(options = {}, p = root) {
+      [options, p] = this._context(options, p);
+      checkOptions('zeichne', options, ['jahr', 'schnitt', 'licht']);
+      this._webgl(p);
+      const schnitt = fraction(options.schnitt, 'schnitt', 0), items = this._until(options), cutX = this._cut(items, schnitt);
+      p.push();
+      try {
+        if (options.licht !== false) { p.ambientLight(120); p.directionalLight(170, 168, 160, -.5, .7, -.5); p.directionalLight(70, 70, 78, .7, -.1, .7); }
+        for (const item of items) item.type === 'decke' ? this._cover(item, p, cutX) : this._piece(item, p, true);
+      } finally { p.pop(); }
+      return this;
+    }
+    geometrie(options = {}, p = root) {
+      [options, p] = this._context(options, p);
+      checkOptions('geometrie', options, ['jahr', 'schnitt']);
+      this._webgl(p);
+      const schnitt = fraction(options.schnitt, 'schnitt', 0), items = this._until(options), cutX = this._cut(items, schnitt);
+      return p.buildGeometry(() => { for (const item of items) item.type === 'decke' ? this._cover(item, p, cutX) : this._piece(item, p, false); });
+    }
+  }
+  const fontModels = new Map();
+  // A bundled face as a p5.Font, for text in bau().
+  function schrift(name, options = {}, p = root) {
+    if (isContext(options)) { p = options; options = {}; }
+    if (!faces[name]) return Promise.reject(new RangeError('schrift knows grotesk and antiqua'));
+    if (!options || typeof options !== 'object' || Array.isArray(options)) return Promise.reject(new TypeError('schrift options must be an object'));
+    for (const key of Object.keys(options)) if (key !== 'fontsURL') return Promise.reject(new RangeError('Unknown schrift option: ' + key));
+    const base = options.fontsURL || (libraryURL ? new URL('assets/fonts/', libraryURL).href : null);
+    if (!base) return Promise.reject(new Error('Merz.schrift needs fontsURL, the folder with archivo/ and bodoni-moda/, when the library has no script URL'));
+    if (!p || typeof p.loadFont !== 'function') return Promise.reject(new TypeError('schrift needs a p5 instance with loadFont'));
+    const url = new URL(faces[name].file, base).href, key = url + '|' + (p === root ? 'global' : 'instance');
+    if (!fontModels.has(key)) {
+      const loading = Promise.resolve(p.loadFont(url)).catch(error => { fontModels.delete(key); throw error; });
+      fontModels.set(key, loading);
+    }
+    return fontModels.get(key);
+  }
   // Coordinates select the short drawing route; data calls keep their own signatures.
   function drawingCall(name, original) {
     return function(source, ...args) {
@@ -1388,6 +1719,7 @@
   root.Merz=Object.freeze({version:'0.3.0',palette,farbe:settings(),ready,settings,
     satz:drawingCall('satz',satz),bauteile:drawingCall('bauteile',bauteile),bauteil:drawingCall('bauteil',bauteil),
     ausschnitt,rundschnitt:drawingCall('rundschnitt',rundschnitt),splitter,schnitt,riss:drawingCall('riss',riss),
-    andruck:drawingCall('andruck',andruck),stempel,fundsachen,characters:Object.keys(glyphs).join(''),create:options=>new MerzComposition(options)});
+    andruck:drawingCall('andruck',andruck),stempel,fundsachen,characters:Object.keys(glyphs).join(''),create:options=>new MerzComposition(options),
+    blatt:(options,p)=>new Blatt(options,p),bau:(options,p)=>new Bau(options,p),schrift});
   root.MerzComposition=MerzComposition;
 })(globalThis);
