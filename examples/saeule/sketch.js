@@ -32,6 +32,7 @@ async function setup() {
 }
 
 function draw() {
+  if (!bau) return;
   background(Merz.farbe.grau);
   orbitControl(1, 1, 0.1);
   // The floor is the sketch's own; it needs no light.

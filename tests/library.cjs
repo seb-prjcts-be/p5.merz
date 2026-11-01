@@ -24,5 +24,8 @@ const graphicsCalls=[];const graphics=new Proxy({}, {get:(_,key)=>['CORNER','PRO
 assert.ok(graphicsCalls.some(a=>a[0]==='rectMode'&&a[1]==='corner'));
 assert.ok(graphicsCalls.some(a=>a[0]==='strokeCap'&&a[1]==='square'));
 assert.ok(graphicsCalls.some(a=>a[0]==='strokeJoin'&&a[1]==='miter'));
-c.clear();const newId=c.letter('N',0,0);assert.notEqual(newId,word);assert.throws(()=>c.get(word));return svg;}
+c.clear();const newId=c.letter('N',0,0);assert.notEqual(newId,word);assert.throws(()=>c.get(word));
+const flipped=c.plane(10,10,40,20,{mirror:true});assert.equal(c.get(flipped).mirror,true);assert.ok(c.exportSVG().includes('translate(40 0) scale(-1 1)'));assert.equal(c.get(newId).mirror,false);
+assert.throws(()=>c.update(flipped,{mirror:'yes'}));assert.throws(()=>c.plane(0,0,1,1,{rotation:90}),/angle, in degrees/);assert.throws(()=>c.plane(0,0,1,1,{colour:'#000000'}),/plane accepts/);
+return svg;}
 const source=test('p5.merz.js');if(fs.existsSync('p5.merz.min.js'))assert.equal(source,test('p5.merz.min.js'));console.log('Library and build: 26 distinct letters, stable ids, atomic edits, order, spacing, SVG and renderer isolation passed.');

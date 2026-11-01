@@ -17,6 +17,6 @@ function build(){
 }
 function draw(){
   specimen.draw();
-  noStroke();fill('#62625b');textFont('Arial');textSize(14);
-  chars.forEach((char,i)=>text(char,28+(i%8)*110,115+Math.floor(i/8)*120));
+  // The label under each drawing is the same character from the printer's case.
+  chars.forEach((char,i)=>Merz.stempel(char,28+(i%8)*110,115+Math.floor(i/8)*120,{size:14,weight:500,color:'#62625b'}));
 }

@@ -81,5 +81,10 @@ async function setup() {
     check('instance sheet matches global sheet', differ(c, sheetFull) === 0);
     h.remove();
     document.getElementById('result').textContent = results.map(([name, ok]) => (ok ? 'PASS ' : 'FAIL ') + name).join('\n');
+    // Browsers keep only a handful of WebGL contexts alive; give these back for the pages that follow.
+    for (const canvas of document.querySelectorAll('canvas')) {
+      const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+      if (gl && gl.getExtension('WEBGL_lose_context')) gl.getExtension('WEBGL_lose_context').loseContext();
+    }
   }; });
 }
